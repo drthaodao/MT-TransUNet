@@ -244,28 +244,35 @@ def get_data(args):
 
     if 'isic' in data_str.lower():
         ############# Load training data
-        data_train_root = 'root for /ISIC2017/Training'
-        data_train_add_root = 'root for /ISIC2017/Training_addition'
+        data_train_root = '/content/main/isic/data/Foot Ulcer Segmentation Challenge/train'
+        batch_sampler = int(args.batch_size / 2)
+        trainloader = data.DataLoader(MyDataSet_seg(data_train_root, None, crop_size=(args.w, args.h)),                          
+                                    num_workers=8,
+                                    pin_memory=True)
+        '''
+        #data_train_add_root = 'root for /ISIC2017/Training_addition'
         train_dataset_label = MyDataSet_seg(data_train_root, None, crop_size=(args.w, args.h))
-        train_dataset_unlabel = MyDataSet_seg(data_train_add_root, None, crop_size=(args.w, args.h),
-                                              label=False)
-        train_data = torch.utils.data.ConcatDataset([train_dataset_label, train_dataset_unlabel])
+        #train_dataset_unlabel = MyDataSet_seg(data_train_add_root, None, crop_size=(args.w, args.h),
+        #                                      label=False)
+        #train_data = torch.utils.data.ConcatDataset([train_dataset_label, train_dataset_unlabel])
+        train_data = train_dataset_label
         labeled_idxs = list(range(args.label_data))
-        unlabeled_idxs = list(range(args.label_data, args.label_data + args.unlabel_data))
+        #unlabeled_idxs = list(range(args.label_data, args.label_data + args.unlabel_data))
 
         batch_sampler = TwoStreamBatchSampler(
             labeled_idxs, unlabeled_idxs, args.batch_size, int(args.batch_size / 2))
         trainloader = data.DataLoader(train_data, batch_sampler=batch_sampler, num_workers=8, pin_memory=True)
+        '''        
 
         ############# Load val data
-        data_val_root = 'root for /ISIC2017/Validation'
+        data_val_root = '/content/main/isic/data/Foot Ulcer Segmentation Challenge/validation'
         valloader = data.DataLoader(MyValDataSet_seg(data_val_root, None, crop_size=(args.w, args.h)),
                                     batch_size=1, shuffle=False,
                                     num_workers=8,
                                     pin_memory=True)
 
         ############# Load testing data
-        data_test_root = 'root for /ISIC2017/Testing'
+        data_test_root = '/content/main/isic/data/Foot Ulcer Segmentation Challenge/test'
         testloader = data.DataLoader(
             MyTestDataSet_seg(data_test_root, None, crop_size=(args.w, args.h)), batch_size=1,
             shuffle=False,

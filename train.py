@@ -45,7 +45,7 @@ parser.add_argument('--ac_loss', type=float, default=0.0)
 parser.add_argument('--ds', type=float, default=0.0)
 parser.add_argument('--weight_cls', action='store_true')
 parser.add_argument('--print_time', action='store_true')
-parser.add_argument('--train_mode', default='seg+cls+dual',
+parser.add_argument('--train_mode', default='seg_only',
                     choices=['seg_only', 'cls_only', 'seg+cls', 'seg+dual', 'seg+cls+dual'])
 args = parser.parse_args()
 

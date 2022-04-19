@@ -26,25 +26,29 @@ class MyDataSet_seg(data.Dataset):
         self.crop_w, self.crop_h = crop_size
         self.label = label
 
-        self.ids = os.listdir(os.path.join(self.root_path, 'Images'))
-        self.img_ids = [f'/Images/{i} /Annotations/{i}' for i in self.ids]
+        # self.ids = os.listdir(os.path.join(self.root_path, 'Images'))
+        # self.img_ids = [f'/Images/{i} /Annotations/{i}' for i in self.ids]
 
-        if not max_iters==None:
-            self.img_ids = self.img_ids * int(np.ceil(float(max_iters) / len(self.img_ids)))
+        self.image_names = os.listdir(os.path.join(self.root_path, 'images'))
+
+
+        # if not max_iters==None:
+        #     self.img_ids = self.img_ids * int(np.ceil(float(max_iters) / len(self.img_ids)))
         self.files = []
         if self.label:
-            for index, name in enumerate(self.img_ids):
-                img_file = name[0:name.find(' ')]
-                label_file = name[name.find(' ')+1:]
+            for index, name in enumerate(self.image_names):
+                img_file = os.path.join(self.root_path, 'images', name)
+                label_file = os.path.join(self.root_path, 'labels', name)
                 self.files.append({
                     "img": img_file,
                     "label": label_file,
                     "name": name
                 })
         else:
-            for name in self.img_ids:
-                img_file = name[0:name.find(' ')]
+            for name in self.image_names:
+                # img_file = name[0:name.find(' ')]
                 # label_file = name[name.find(' ')+1:]
+                img_file = os.path.join(self.root_path, 'images', name)
                 self.files.append({
                     "img": img_file,
                     "label": img_file,
@@ -85,11 +89,11 @@ class MyDataSet_seg(data.Dataset):
 
     def __getitem__(self, index):
         datafiles = self.files[index]
-        image = Image.open(self.root_path + datafiles["img"]).convert('RGB')
+        image = Image.open( datafiles["img"]).convert('RGB')
         if self.label:
-            label = Image.open(self.root_path + datafiles["label"])
+            label = Image.open( datafiles["label"]).convert('L')
         else:
-            label = Image.open(self.root_path + datafiles["label"]).convert('L')
+            label = Image.open( datafiles["label"]).convert('L')
 
         is_crop = [0,1]
         random.shuffle(is_crop)
@@ -124,8 +128,10 @@ class MyDataSet_seg(data.Dataset):
 
         label = np.array(label)
         label = np.float32(label > 0)
-        name = datafiles["img"].split('/')[-1]
-
+        name = datafiles["name"] #.split('/')[-1]
+        
+        # print(self.label, 'image', image.shape)
+        # print(self.label, 'label', label.shape)
         return image.copy(), label.copy(), name
 
 
@@ -138,13 +144,11 @@ class MyValDataSet_seg(data.Dataset):
         self.list_path = list_path
         self.crop_h, self.crop_w = crop_size
 
-        self.ids = os.listdir(os.path.join(self.root_path, 'Images'))
-        self.img_ids = [f'/Images/{i} /Annotations/{i}' for i in self.ids]
-
+        self.image_names = os.listdir(os.path.join(self.root_path, 'images'))
         self.files = []
-        for name in self.img_ids:
-            img_file = name[0:name.find(' ')]
-            label_file = name[name.find(' ')+1:]
+        for index, name in enumerate(self.image_names):
+            img_file = os.path.join(self.root_path, 'images', name)
+            label_file = os.path.join(self.root_path, 'labels', name)
             self.files.append({
                 "img": img_file,
                 "label": label_file,
@@ -157,8 +161,8 @@ class MyValDataSet_seg(data.Dataset):
     def __getitem__(self, index):
         datafiles = self.files[index]
 
-        image = Image.open(self.root_path + datafiles["img"]).convert('RGB')
-        label = Image.open(self.root_path + datafiles["label"])
+        image = Image.open(datafiles["img"]).convert('RGB')
+        label = Image.open(datafiles["label"]).convert('L')
 
         image = image.resize((self.crop_h, self.crop_w), Image.BICUBIC)
         label = label.resize((self.crop_h, self.crop_w), Image.NEAREST)
@@ -169,7 +173,7 @@ class MyValDataSet_seg(data.Dataset):
 
         label = np.array(label)
 
-        name = datafiles["img"].split('/')[0]
+        name = datafiles["name"]#.split('/')[0]
 
         return image.copy(), label.copy(), name
 
@@ -182,23 +186,31 @@ class MyTestDataSet_seg(data.Dataset):
         self.list_path = list_path
         self.crop_h, self.crop_w = crop_size
 
-        self.ids = os.listdir(os.path.join(self.root_path, 'Images'))
-        self.img_ids = [f'/Images/{i} /Annotations/{i}' for i in self.ids]
-
+        self.image_names = os.listdir(os.path.join(self.root_path, 'images'))
         self.files = []
-        for index, name in enumerate(self.img_ids):
-
-            if fold is not None:
-                if not (index >= fold * 50 and index < (fold + 1) * 50):
-                    continue
-
-            img_file = name[0:name.find(' ')]
-            label_file = name[name.find(' ')+1:]
+        for index, name in enumerate(self.image_names):
+            img_file = os.path.join(self.root_path, 'images', name)
+            label_file = os.path.join(self.root_path, 'labels', name)
             self.files.append({
                 "img": img_file,
                 "label": label_file,
                 "name": name
             })
+
+        # self.files = []
+        # for index, name in enumerate(self.img_ids):
+
+        #     if fold is not None:
+        #         if not (index >= fold * 50 and index < (fold + 1) * 50):
+        #             continue
+
+        #     img_file = name[0:name.find(' ')]
+        #     label_file = name[name.find(' ')+1:]
+        #     self.files.append({
+        #         "img": img_file,
+        #         "label": label_file,
+        #         "name": name
+        #     })
 
     def __len__(self):
         return len(self.files)
@@ -206,8 +218,8 @@ class MyTestDataSet_seg(data.Dataset):
     def __getitem__(self, index):
         datafiles = self.files[index]
 
-        image = Image.open(self.root_path + datafiles["img"]).convert('RGB')
-        label = Image.open(self.root_path + datafiles["label"])
+        image = Image.open(datafiles["img"]).convert('RGB')
+        label = Image.open(datafiles["label"])
 
         image0 = image.resize((self.crop_h, self.crop_w), Image.BICUBIC)
         image0 = np.array(image0) / 255.
@@ -245,23 +257,33 @@ def get_data(args):
     if 'isic' in data_str.lower():
         ############# Load training data
         data_train_root = '/content/main/isic/data/Foot Ulcer Segmentation Challenge/train'
-        batch_sampler = int(args.batch_size / 2)
-        trainloader = data.DataLoader(MyDataSet_seg(data_train_root, None, crop_size=(args.w, args.h)),                          
-                                    num_workers=8,
-                                    pin_memory=True)
+        # batch_sampler = int(args.batch_size / 2)
+        # trainloader = data.DataLoader(
+        #   MyDataSet_seg(data_train_root, None, crop_size=(args.w, args.h)),
+        #   batch_size=args.batch_size,                          
+        #   num_workers=8,
+        #   pin_memory=True)
+        labeled_idxs = list(range(args.label_data))
+        unlabeled_idxs = list(range(args.label_data,  args.label_data+args.unlabel_data))
+        batch_sampler = TwoStreamBatchSampler(
+            labeled_idxs, unlabeled_idxs, args.batch_size, int(args.batch_size / 2))
+       
+        train_data = torch.utils.data.ConcatDataset([
+            MyDataSet_seg(data_train_root, None, crop_size=(args.w, args.h)),
+            MyDataSet_seg(data_train_root, None, crop_size=(args.w, args.h), label=False),
+        ])
+        trainloader = data.DataLoader(
+          train_data,
+          batch_sampler=batch_sampler, 
+          num_workers=1, 
+          pin_memory=True)
         '''
         #data_train_add_root = 'root for /ISIC2017/Training_addition'
         train_dataset_label = MyDataSet_seg(data_train_root, None, crop_size=(args.w, args.h))
         #train_dataset_unlabel = MyDataSet_seg(data_train_add_root, None, crop_size=(args.w, args.h),
         #                                      label=False)
-        #train_data = torch.utils.data.ConcatDataset([train_dataset_label, train_dataset_unlabel])
         train_data = train_dataset_label
-        labeled_idxs = list(range(args.label_data))
-        #unlabeled_idxs = list(range(args.label_data, args.label_data + args.unlabel_data))
 
-        batch_sampler = TwoStreamBatchSampler(
-            labeled_idxs, unlabeled_idxs, args.batch_size, int(args.batch_size / 2))
-        trainloader = data.DataLoader(train_data, batch_sampler=batch_sampler, num_workers=8, pin_memory=True)
         '''        
 
         ############# Load val data
@@ -272,7 +294,7 @@ def get_data(args):
                                     pin_memory=True)
 
         ############# Load testing data
-        data_test_root = '/content/main/isic/data/Foot Ulcer Segmentation Challenge/test'
+        data_test_root = '/content/main/isic/data/Foot Ulcer Segmentation Challenge/validation'
         testloader = data.DataLoader(
             MyTestDataSet_seg(data_test_root, None, crop_size=(args.w, args.h)), batch_size=1,
             shuffle=False,

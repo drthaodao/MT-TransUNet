@@ -56,7 +56,7 @@ def trainer(args, model):
     trainloader, valloader, testloader = dataloader_group['trainloader'], dataloader_group['valloader'], \
                                          dataloader_group['testloader']
 
-    label_dic = get_cls_label(args)
+    # label_dic = get_cls_label(args)
 
     best_val_jac = 0
     best_cls = 0
@@ -81,7 +81,7 @@ def trainer(args, model):
             optimizer.zero_grad()
             lr = adjust_learning_rate(args, optimizer, iter_num)
             preds, dt_preds, cls_logits, attention_maps, ds_mask_logits = model(images)
-            cls_label = name_list_to_cls_label(name, label_dic)
+            # cls_label = name_list_to_cls_label(name, label_dic)
 
             ### attention loss
             last_att_maps = attention_maps[0]
@@ -132,7 +132,7 @@ def trainer(args, model):
             dis_to_mask = torch.sigmoid(-1500 * dt_preds)
 
             ### cls loss
-            cls_loss = ce_loss(cls_logits, cls_label)
+            cls_loss = torch.zeros([1])   #ce_loss(cls_logits, cls_label)
 
             ### consistency loss
             consistency_loss = torch.mean(
@@ -253,9 +253,12 @@ def trainer(args, model):
                 writer.add_scalar('val/vsen', np.nanmean(vsen), epoch)
                 writer.add_scalar('val/vspe', np.nanmean(vspe), epoch)
                 writer.add_scalar('val/vjac_score', np.nanmean(vjac_score), epoch)
-
+        continue
         with torch.no_grad():
             print('start test!')
+            exit(0)
+
+            # return
 
             [vacc, vdice, vsen, vspe, vjac_score, total_acc, m_acc, s_acc, dic] = val_mode_seg_multi_scale(args,
                                                                                                            testloader,
